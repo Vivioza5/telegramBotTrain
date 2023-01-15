@@ -46,11 +46,12 @@ public class TrainingBot extends TelegramLongPollingBot {
     private void startCommandRecived(long chatId, String firstName) {
         SendMessage sm = new SendMessage();
         sm.setText("Hi, " + firstName + " what next command?");
+        log.info("Replied to user" + firstName);
         sm.setChatId(chatId);
         try {
             execute(sm);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
