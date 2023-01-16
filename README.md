@@ -14,5 +14,19 @@ You can run application locally:
 * Set values for variables
 * Run the project's main file.
 
+You can run application remote:
+* create jar file from project
+* copy jar file to linux server 
+* type commands:
+```
+cd /etc/systemd/system 
+touch training-bot.service
+```
+ 
+* use script from folder scripts *.service
+
+* type commands:
+
+```systemctl start training-bot.service```
 ## Languages
 - [ ] Java / TelegramPollingBot
