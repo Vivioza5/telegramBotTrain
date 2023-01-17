@@ -1,23 +1,39 @@
 package com.example.demo.trainingbot.service;
 
 import com.example.demo.trainingbot.config.BotConfig;
+import com.example.demo.trainingbot.model.User;
+import com.example.demo.trainingbot.model.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.grizzly.http.util.TimeStamp;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Component
 public class TrainingBot extends TelegramLongPollingBot {
+    @Autowired
+    private UserRepository userRepository;
     final BotConfig config;
+    static final String HELP_TEXT=
+            "Я бот, который поможет потренировать умения написания ботов\n\n" +
+                        "❗*Список команд*\n" +
+                        "/start - начала разговора\n" +
+                        "/mydata - получение данных о пользователе\n" +
+                        "/deletedata - удаление данных о пользователе\n" +
+                        "/settings - просмотреть текущие настройки\n" +
+                        "/help - помощь\n\n";
 
     public TrainingBot(BotConfig config) {
         this.config = config;
@@ -53,11 +69,30 @@ public class TrainingBot extends TelegramLongPollingBot {
             switch (messageText) {
                 case ("/start"):
                     startCommandRecived(chatId, update.getMessage().getChat().getFirstName());
+                    registerUser(update.getMessage());
+                    break;
+                case("/help"):
+                    sendMessage(chatId, HELP_TEXT);
                     break;
                 default:
                     sendMessage(chatId, "Sorry this command no recognised");
             }
         }
+    }
+
+    private void registerUser(Message msg) {
+if (userRepository.findById(msg.getChatId()).isEmpty()){
+    var chatId = msg.getChatId();
+    var chat = msg.getChat();
+
+    User user = new User();
+    user.setChatid(chatId);
+    user.setFirstName(chat.getFirstName());
+    user.setLastName(chat.getLastName());
+    user.setUserName(chat.getUserName());
+    user.setStartTalk(new Timestamp(System.currentTimeMillis()));
+    userRepository.save(user);
+}
     }
 
     private void startCommandRecived(long chatId, String firstName) {
