@@ -3,6 +3,7 @@ package com.example.demo.trainingbot.service;
 import com.example.demo.trainingbot.config.BotConfig;
 import com.example.demo.trainingbot.model.User;
 import com.example.demo.trainingbot.model.UserRepository;
+import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.http.util.TimeStamp;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.sql.Timestamp;
@@ -72,10 +75,10 @@ public class TrainingBot extends TelegramLongPollingBot {
                     registerUser(update.getMessage());
                     break;
                 case("/help"):
-                    sendMessage(chatId, HELP_TEXT);
+                    sendMessage(chatId, HELP_TEXT,getReplyIgnoreMessKeyboardMarkup());
                     break;
                 default:
-                    sendMessage(chatId, "Sorry this command no recognised");
+                    sendMessage(chatId, "Sorry this command no recognised",getReplyKeyboardMarkup());
             }
         }
     }
@@ -97,24 +100,42 @@ if (userRepository.findById(msg.getChatId()).isEmpty()){
 
     private void startCommandRecived(long chatId, String firstName) {
         SendMessage sm = new SendMessage();
-        sm.setText("Hi, " + firstName + " what next command?");
-        log.info("Replied to user" + firstName);
-        sm.setChatId(chatId);
-        try {
-            execute(sm);
-        } catch (TelegramApiException e) {
-            log.error(e.getMessage());
-        }
+        String answer = EmojiParser.parseToUnicode("Hi, " + firstName + " what next command?"+":blush:");
+        sendMessage(chatId,answer,getReplyKeyboardMarkup());
     }
 
-    private void sendMessage(long chatId, String text) {
+    private void sendMessage(long chatId, String text,ReplyKeyboardMarkup keyboardMarkup) {
         SendMessage sm = new SendMessage();
         sm.setText(text);
         sm.setChatId(chatId);
+        sm.setReplyMarkup(keyboardMarkup);
         try {
             execute(sm);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private static ReplyKeyboardMarkup getReplyKeyboardMarkup() {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        List <KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row= new KeyboardRow();
+        row.add("weather");
+        row.add("get random joke");
+        keyboardRows.add(row);
+        keyboardMarkup.setKeyboard(keyboardRows);
+        return keyboardMarkup;
+    }
+
+        private static ReplyKeyboardMarkup getReplyIgnoreMessKeyboardMarkup() {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        List <KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row= new KeyboardRow();
+        row.add("register");
+        row.add("check my data");
+        row.add("delete my data");
+        keyboardRows.add(row);
+        keyboardMarkup.setKeyboard(keyboardRows);
+        return keyboardMarkup;
     }
 }
