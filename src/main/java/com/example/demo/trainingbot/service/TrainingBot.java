@@ -11,11 +11,14 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -26,28 +29,32 @@ import java.util.List;
 @Slf4j
 @Component
 public class TrainingBot extends TelegramLongPollingBot {
+    public static final String YES_BUTTON = "YES_BUTTON";
+    public static final String NO_BUTTON = "NO_BUTTON";
     @Autowired
     private UserRepository userRepository;
     final BotConfig config;
-    static final String HELP_TEXT=
+    static final String HELP_TEXT =
             "Я бот, который поможет потренировать умения написания ботов\n\n" +
-                        "❗*Список команд*\n" +
-                        "/start - начала разговора\n" +
-                        "/mydata - получение данных о пользователе\n" +
-                        "/deletedata - удаление данных о пользователе\n" +
-                        "/settings - просмотреть текущие настройки\n" +
-                        "/help - помощь\n\n";
+                    "❗*Список команд*\n" +
+                    "/start - начала разговора\n" +
+                    "/mydata - получение данных о пользователе\n" +
+                    "/deletedata - удаление данных о пользователе\n" +
+                    "/settings - просмотреть текущие настройки\n" +
+                    "/help - помощь\n\n";
 
     public TrainingBot(BotConfig config) {
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
-        listOfCommands.add(new BotCommand("/start","command to start talk"));
-        listOfCommands.add(new BotCommand("/help","command to call help"));
-        listOfCommands.add(new BotCommand("/mydata","command to show my data"));
-        listOfCommands.add(new BotCommand("/deletedata","command to delete my data"));
-        listOfCommands.add(new BotCommand("/settings","command to change settings of the bot"));
+        listOfCommands.add(new BotCommand("/start", "command to start talk"));
+        listOfCommands.add(new BotCommand("/help", "command to call help"));
+        listOfCommands.add(new BotCommand("/mydata", "command to show my data"));
+        listOfCommands.add(new BotCommand("/deletedata", "command to delete my data"));
+        listOfCommands.add(new BotCommand("/settings", "command to change settings of the bot"));
+        listOfCommands.add(new BotCommand("/register", "command to change settings of the bot"));
+
         try {
-            this.execute( new SetMyCommands(listOfCommands, new BotCommandScopeDefault(),null));
+            this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
             log.error("Error setting bot's command list" + e.getMessage());
         }
@@ -74,41 +81,101 @@ public class TrainingBot extends TelegramLongPollingBot {
                     startCommandRecived(chatId, update.getMessage().getChat().getFirstName());
                     registerUser(update.getMessage());
                     break;
-                case("/help"):
-                    sendMessage(chatId, HELP_TEXT,getReplyIgnoreMessKeyboardMarkup());
+                case ("/help"):
+                    sendMessage(chatId, HELP_TEXT, getReplyIgnoreMessKeyboardMarkup());
+                    break;
+                case ("/register"):
+                    register(chatId);
                     break;
                 default:
-                    sendMessage(chatId, "Sorry this command no recognised",getReplyKeyboardMarkup());
+                    sendMessage(chatId, "Sorry this command no recognised", getReplyKeyboardMarkup());
+            }
+        } else if (update.hasCallbackQuery()) {
+            String callbackData = update.getCallbackQuery().getData();
+            long messageId = update.getCallbackQuery().getMessage().getMessageId();
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+            if (callbackData.equals(YES_BUTTON)) {
+                String message = "you press button Yes";
+                editMessageText((int) messageId, chatId, message);
+
+
+            } else if (callbackData.equals(NO_BUTTON)) {
+                String message = "you press button No";
+                editMessageText((int) messageId, chatId, message);
             }
         }
     }
 
-    private void registerUser(Message msg) {
-if (userRepository.findById(msg.getChatId()).isEmpty()){
-    var chatId = msg.getChatId();
-    var chat = msg.getChat();
+    private void editMessageText(int messageId, long chatId, String message) {
+        EditMessageText messageText = new EditMessageText();
+        messageText.setChatId(chatId);
+        messageText.setText(message);
+        messageText.setMessageId(messageId);
+        try {
+            execute(messageText);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
 
-    User user = new User();
-    user.setChatid(chatId);
-    user.setFirstName(chat.getFirstName());
-    user.setLastName(chat.getLastName());
-    user.setUserName(chat.getUserName());
-    user.setStartTalk(new Timestamp(System.currentTimeMillis()));
-    userRepository.save(user);
-}
+    private void register(long chatId) {
+        SendMessage sm = new SendMessage();
+        sm.setChatId(chatId);
+        sm.setText("DO you realy want to register?");
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+        List<InlineKeyboardButton> rowInline = new ArrayList<>();
+        var yesButton = new InlineKeyboardButton();
+        yesButton.setText("Yes");
+        yesButton.setCallbackData(YES_BUTTON);
+        var noButton = new InlineKeyboardButton();
+        noButton.setText("No");
+        noButton.setCallbackData(NO_BUTTON);
+        rowInline.add(yesButton);
+        rowInline.add(noButton);
+        rowsInline.add(rowInline);
+        markupInline.setKeyboard(rowsInline);
+        sm.setReplyMarkup(markupInline);
+        executeMessage(sm);
+    }
+
+    private void registerUser(Message msg) {
+        if (userRepository.findById(msg.getChatId()).isEmpty()) {
+            var chatId = msg.getChatId();
+            var chat = msg.getChat();
+
+            User user = new User();
+            user.setChatid(chatId);
+            user.setFirstName(chat.getFirstName());
+            user.setLastName(chat.getLastName());
+            user.setUserName(chat.getUserName());
+            user.setStartTalk(new Timestamp(System.currentTimeMillis()));
+            userRepository.save(user);
+        }
     }
 
     private void startCommandRecived(long chatId, String firstName) {
         SendMessage sm = new SendMessage();
-        String answer = EmojiParser.parseToUnicode("Hi, " + firstName + " what next command?"+":blush:");
-        sendMessage(chatId,answer,getReplyKeyboardMarkup());
+        String answer = EmojiParser.parseToUnicode("Hi, " + firstName + " what next command?" + ":blush:");
+        sendMessage(chatId, answer, getReplyKeyboardMarkup());
     }
 
-    private void sendMessage(long chatId, String text,ReplyKeyboardMarkup keyboardMarkup) {
+    private void sendMessage(long chatId, String text, ReplyKeyboardMarkup keyboardMarkup) {
         SendMessage sm = new SendMessage();
         sm.setText(text);
         sm.setChatId(chatId);
         sm.setReplyMarkup(keyboardMarkup);
+        executeMessage(sm);
+    }
+
+    private void sendMessage(long chatId, String text) {
+        SendMessage sm = new SendMessage();
+        sm.setText(text);
+        sm.setChatId(chatId);
+        executeMessage(sm);
+    }
+
+    private void executeMessage(SendMessage sm) {
         try {
             execute(sm);
         } catch (TelegramApiException e) {
@@ -118,8 +185,8 @@ if (userRepository.findById(msg.getChatId()).isEmpty()){
 
     private static ReplyKeyboardMarkup getReplyKeyboardMarkup() {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-        List <KeyboardRow> keyboardRows = new ArrayList<>();
-        KeyboardRow row= new KeyboardRow();
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row = new KeyboardRow();
         row.add("weather");
         row.add("get random joke");
         keyboardRows.add(row);
@@ -127,10 +194,10 @@ if (userRepository.findById(msg.getChatId()).isEmpty()){
         return keyboardMarkup;
     }
 
-        private static ReplyKeyboardMarkup getReplyIgnoreMessKeyboardMarkup() {
+    private static ReplyKeyboardMarkup getReplyIgnoreMessKeyboardMarkup() {
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-        List <KeyboardRow> keyboardRows = new ArrayList<>();
-        KeyboardRow row= new KeyboardRow();
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row = new KeyboardRow();
         row.add("register");
         row.add("check my data");
         row.add("delete my data");
