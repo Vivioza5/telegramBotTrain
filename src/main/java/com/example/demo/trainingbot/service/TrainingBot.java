@@ -75,6 +75,15 @@ public class TrainingBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
+            if(messageText.contains("/send")&&chatId==config.getBOT_OWNER()){
+
+                var textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
+                var users = userRepository.findAll();
+                for (User user :
+                        users) {
+                    sendMessage(user.getChatid(), textToSend);
+                }
+            }
 
             switch (messageText) {
                 case ("/start"):
@@ -143,7 +152,6 @@ public class TrainingBot extends TelegramLongPollingBot {
         if (userRepository.findById(msg.getChatId()).isEmpty()) {
             var chatId = msg.getChatId();
             var chat = msg.getChat();
-
             User user = new User();
             user.setChatid(chatId);
             user.setFirstName(chat.getFirstName());

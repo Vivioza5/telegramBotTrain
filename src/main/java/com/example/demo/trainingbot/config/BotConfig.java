@@ -13,4 +13,8 @@ public class BotConfig {
     String BOT_NAME;
     @Value("${botToken}")
     String BOT_TOKEN;
+    @Value("${bot.owner}")
+    Long BOT_OWNER;
+
+
 }
