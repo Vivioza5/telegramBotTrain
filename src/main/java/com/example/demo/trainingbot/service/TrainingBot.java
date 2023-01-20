@@ -3,6 +3,7 @@ package com.example.demo.trainingbot.service;
 import com.example.demo.trainingbot.config.BotConfig;
 import com.example.demo.trainingbot.enums.ButtonNameEnum;
 import com.example.demo.trainingbot.enums.CommandNameEnum;
+import com.example.demo.trainingbot.model.AdsRepository;
 import com.example.demo.trainingbot.model.User;
 import com.example.demo.trainingbot.model.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
@@ -34,6 +35,8 @@ public class TrainingBot extends TelegramLongPollingBot {
     public static final String NO_BUTTON = "NO_BUTTON";
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private AdsRepository adsRepository;
     final BotConfig config;
     static final String HELP_TEXT =
             "Я бот, который поможет потренировать умения написания ботов\n\n" +
