@@ -1,6 +1,8 @@
 package com.example.demo.trainingbot.service;
 
 import com.example.demo.trainingbot.config.BotConfig;
+import com.example.demo.trainingbot.enums.ButtonNameEnum;
+import com.example.demo.trainingbot.enums.CommandNameEnum;
 import com.example.demo.trainingbot.model.User;
 import com.example.demo.trainingbot.model.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
@@ -46,13 +48,13 @@ public class TrainingBot extends TelegramLongPollingBot {
     public TrainingBot(BotConfig config) {
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
-        listOfCommands.add(new BotCommand("/start", "command to start talk"));
-        listOfCommands.add(new BotCommand("/help", "command to call help"));
-        listOfCommands.add(new BotCommand("/mydata", "command to show my data"));
-        listOfCommands.add(new BotCommand("/deletedata", "command to delete my data"));
-        listOfCommands.add(new BotCommand("/settings", "command to change settings of the bot"));
-        listOfCommands.add(new BotCommand("/register", "command to change settings of the bot"));
 
+        listOfCommands.add(new BotCommand(CommandNameEnum.START_COMMAND.getCommandName(), "command to start talk"));
+        listOfCommands.add(new BotCommand(CommandNameEnum.HELP_COMMAND.getCommandName(), "command to call help"));
+        listOfCommands.add(new BotCommand(CommandNameEnum.GET_MY_DATA_COMMAND.getCommandName(), "command to show my data"));
+        listOfCommands.add(new BotCommand(CommandNameEnum.DELETE_MY_DATA_COMMAND.getCommandName(), "command to delete my data"));
+        listOfCommands.add(new BotCommand(CommandNameEnum.SETTINGS_COMMAND.getCommandName(), "command to change settings of the bot"));
+        listOfCommands.add(new BotCommand(CommandNameEnum.REGISTER_COMMAND.getCommandName(), "command to change settings of the bot"));
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -75,7 +77,7 @@ public class TrainingBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
-            if(messageText.contains("/send")&&chatId==config.getBOT_OWNER()){
+            if(messageText.contains(CommandNameEnum.SEND_MESSAGE_TO_ALL_COMMAND.getCommandName())&&chatId==config.getBOT_OWNER()){
 
                 var textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
                 var users = userRepository.findAll();
@@ -135,10 +137,10 @@ public class TrainingBot extends TelegramLongPollingBot {
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         var yesButton = new InlineKeyboardButton();
-        yesButton.setText("Yes");
+        yesButton.setText(ButtonNameEnum.YES_BUTTON.getButtonName());
         yesButton.setCallbackData(YES_BUTTON);
         var noButton = new InlineKeyboardButton();
-        noButton.setText("No");
+        noButton.setText(ButtonNameEnum.NO_BUTTON.getButtonName());
         noButton.setCallbackData(NO_BUTTON);
         rowInline.add(yesButton);
         rowInline.add(noButton);
