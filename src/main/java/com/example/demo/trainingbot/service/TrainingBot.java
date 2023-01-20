@@ -7,7 +7,6 @@ import com.example.demo.trainingbot.model.User;
 import com.example.demo.trainingbot.model.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.http.util.TimeStamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -77,7 +76,7 @@ public class TrainingBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
-            if(messageText.contains(CommandNameEnum.SEND_MESSAGE_TO_ALL_COMMAND.getCommandName())&&chatId==config.getBOT_OWNER()){
+            if (messageText.contains(CommandNameEnum.SEND_MESSAGE_TO_ALL_COMMAND.getCommandName()) && chatId == config.getBOT_OWNER()) {
 
                 var textToSend = EmojiParser.parseToUnicode(messageText.substring(messageText.indexOf(" ")));
                 var users = userRepository.findAll();
@@ -85,21 +84,21 @@ public class TrainingBot extends TelegramLongPollingBot {
                         users) {
                     sendMessage(user.getChatid(), textToSend);
                 }
-            }
-
-            switch (messageText) {
-                case ("/start"):
-                    startCommandRecived(chatId, update.getMessage().getChat().getFirstName());
-                    registerUser(update.getMessage());
-                    break;
-                case ("/help"):
-                    sendMessage(chatId, HELP_TEXT, getReplyIgnoreMessKeyboardMarkup());
-                    break;
-                case ("/register"):
-                    register(chatId);
-                    break;
-                default:
-                    sendMessage(chatId, "Sorry this command no recognised", getReplyKeyboardMarkup());
+            } else {
+                switch ( messageText ) {
+                    case ("/start"):
+                        startCommandRecived(chatId, update.getMessage().getChat().getFirstName());
+                        registerUser(update.getMessage());
+                        break;
+                    case ("/help"):
+                        sendMessage(chatId, HELP_TEXT);
+                        break;
+                    case ("/register"):
+                        register(chatId);
+                        break;
+                    default:
+                        sendMessage(chatId, "Sorry this command no recognised", getReplyKeyboardMarkup());
+                }
             }
         } else if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
