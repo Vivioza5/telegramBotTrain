@@ -2,6 +2,9 @@ package com.example.demo.trainingbot.service;
 
 import com.example.demo.trainingbot.config.BotConfig;
 import com.example.demo.trainingbot.enums.CommandNameEnum;
+import com.example.demo.trainingbot.model.Joke;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,6 +34,7 @@ public class TrainingBot extends TelegramLongPollingBot {
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand(CommandNameEnum.START_COMMAND.getCommandName(), "command to start talk"));
+        listOfCommands.add(new BotCommand(CommandNameEnum.JOKE_COMMAND.getCommandName(), "generate selected joke"));
         listOfCommands.add(new BotCommand(CommandNameEnum.SETTINGS_COMMAND.getCommandName(), "command to change settings of the bot"));
         listOfCommands.add(new BotCommand(CommandNameEnum.HELP_COMMAND.getCommandName(), "command to change settings of the bot"));
         try {
@@ -38,6 +42,10 @@ public class TrainingBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             log.error("Error setting bot's command list" + e.getMessage());
         }
+        ObjectMapper objectMapper= new ObjectMapper();
+        TypeFactory typeFactory=objectMapper.getTypeFactory();
+        List <Joke> jokeList = objectMapper.readValue();
+
     }
 
     @Override

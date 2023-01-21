@@ -3,6 +3,7 @@ package com.example.demo.trainingbot.enums;
 public enum CommandNameEnum {
     START_COMMAND("/start"),
     SETTINGS_COMMAND("/settings"),
+    JOKE_COMMAND("/joke"),
     HELP_COMMAND("/help");
 
 
