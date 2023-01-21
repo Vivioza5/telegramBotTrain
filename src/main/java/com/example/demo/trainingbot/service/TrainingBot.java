@@ -3,12 +3,14 @@ package com.example.demo.trainingbot.service;
 import com.example.demo.trainingbot.config.BotConfig;
 import com.example.demo.trainingbot.enums.ButtonNameEnum;
 import com.example.demo.trainingbot.enums.CommandNameEnum;
+import com.example.demo.trainingbot.model.Ads;
 import com.example.demo.trainingbot.model.AdsRepository;
 import com.example.demo.trainingbot.model.User;
 import com.example.demo.trainingbot.model.UserRepository;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -216,5 +218,16 @@ public class TrainingBot extends TelegramLongPollingBot {
         keyboardRows.add(row);
         keyboardMarkup.setKeyboard(keyboardRows);
         return keyboardMarkup;
+    }
+
+    @Scheduled(cron = "${cron.scheduler}")
+    private void sendAds() {
+        var ads = adsRepository.findAll();
+        var users = userRepository.findAll();
+        for (Ads ad : ads) {
+            for (User user : users) {
+                sendMessage(user.getChatid(), ad.getAd());
+            }
+        }
     }
 }
