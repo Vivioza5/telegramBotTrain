@@ -16,5 +16,9 @@ public class User {
     private String lastName;
     private String userName;
     private Timestamp startTalk;
+    private boolean embededJoke;
+    private String phoneNumber;
+    private Timestamp registeredAt;
+
 
 }
