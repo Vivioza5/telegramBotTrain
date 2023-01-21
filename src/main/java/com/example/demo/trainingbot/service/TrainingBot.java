@@ -91,18 +91,13 @@ public class TrainingBot extends TelegramLongPollingBot {
                 }
             } else {
                 switch ( messageText ) {
-                    case ("/start"):
+                    case ("/start") -> {
                         startCommandRecived(chatId, update.getMessage().getChat().getFirstName());
                         registerUser(update.getMessage());
-                        break;
-                    case ("/help"):
-                        sendMessage(chatId, HELP_TEXT);
-                        break;
-                    case ("/register"):
-                        register(chatId);
-                        break;
-                    default:
-                        sendMessage(chatId, "Sorry this command no recognised", getReplyKeyboardMarkup());
+                    }
+                    case ("/help") -> sendMessage(chatId, HELP_TEXT);
+                    case ("/register") -> register(chatId);
+                    default -> sendMessage(chatId, "Sorry this command no recognised", getReplyKeyboardMarkup());
                 }
             }
         } else if (update.hasCallbackQuery()) {
