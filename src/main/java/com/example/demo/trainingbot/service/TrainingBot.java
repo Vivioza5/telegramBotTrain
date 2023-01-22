@@ -3,10 +3,13 @@ package com.example.demo.trainingbot.service;
 import com.example.demo.trainingbot.config.BotConfig;
 import com.example.demo.trainingbot.enums.CommandNameEnum;
 import com.example.demo.trainingbot.model.Joke;
+import com.example.demo.trainingbot.model.JokeRepository;
+import com.example.demo.trainingbot.model.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -16,6 +19,8 @@ import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +28,10 @@ import java.util.List;
 @Component
 public class TrainingBot extends TelegramLongPollingBot {
     final BotConfig config;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private JokeRepository jokeRepository;
     static final String HELP_TEXT =
             "Я бот, который поможет потренировать умения написания ботов\n\n" +
                     "❗*Список команд*\n" +
@@ -42,10 +51,6 @@ public class TrainingBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             log.error("Error setting bot's command list" + e.getMessage());
         }
-        ObjectMapper objectMapper= new ObjectMapper();
-        TypeFactory typeFactory=objectMapper.getTypeFactory();
-        List <Joke> jokeList = objectMapper.readValue();
-
     }
 
     @Override
@@ -64,7 +69,18 @@ public class TrainingBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
             switch ( messageText ) {
-                case ("/start") -> startCommandRecived(chatId, update.getMessage().getChat().getFirstName());
+                case ("/start") -> {
+                    startCommandRecived(chatId, update.getMessage().getChat().getFirstName());
+                    try {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        TypeFactory typeFactory = objectMapper.getTypeFactory();
+                        List<Joke> jokeList = objectMapper.readValue(new File("db/stupidstuff.json"),
+                                typeFactory.constructCollectionType(List.class, Joke.class));
+                        jokeRepository.saveAll(jokeList);
+                    } catch (IOException e) {
+                        log.error("Error setting bot's " + e.getMessage());
+                    }
+                }
                 case ("/help") -> sendMessage(chatId, HELP_TEXT);
                 default -> sendMessage(chatId, "Sorry this command no recognised");
             }
